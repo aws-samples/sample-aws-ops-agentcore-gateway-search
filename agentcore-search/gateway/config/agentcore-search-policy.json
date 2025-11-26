@@ -1,0 +1,25 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "VisualEditor0",
+			"Effect": "Allow",
+			"Action": [
+				"bedrock-agentcore:*",
+				"bedrock:*",
+				"agent-credential-provider:*",
+				"iam:*",
+				"secretsmanager:GetSecretValue",
+				"lambda:*",
+				"s3:*",
+				"rds:*",
+				"ec2:*",
+				"eks:*",
+				"elasticloadbalancing:*",
+				"apigateway:*",
+				"logs:*"
+			],
+			"Resource": "*"
+		}
+	]
+}

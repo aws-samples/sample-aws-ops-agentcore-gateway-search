@@ -1,0 +1,20 @@
+# macOS system files
+.DS_Store
+
+# Python cache
+__pycache__/
+
+# Test directory
+agentcore-search/tests/
+
+# Gateway runtime configuration (contains sensitive tokens)
+agentcore-search/gateway/config/gateway_runtime_config.json
+agentcore-search/agentcore-runtime/agents/*/config/gateway_runtime_config.json
+
+# Smithy API definition files (download from https://github.com/aws/api-models-aws)
+agentcore-search/smithy/api-definitions/*.json
+
+# AgentCore deployment artifacts (auto-generated)
+**/.bedrock_agentcore.yaml
+**/Dockerfile
+**/.dockerignore
