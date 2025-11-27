@@ -1,6 +1,10 @@
 # macOS system files
 .DS_Store
 
+# Internal project context files
+PROJECT_CONTEXT.md
+**/PROJECT_CONTEXT.md
+
 # Python cache
 __pycache__/
 
