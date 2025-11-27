@@ -16,6 +16,53 @@ This project demonstrates:
 - Automated AWS operations through natural language
 - Conversational AI with context preservation
 
+## AgentCore Semantic Search
+
+This project leverages **Amazon Bedrock AgentCore's semantic search capabilities** to enhance tool selection and intelligent curation across the multi-agent system.
+
+### What is AgentCore Semantic Search?
+
+AgentCore semantic search enables intelligent tool curation through vector-based similarity matching. When `enable_semantic_search=True` is configured on the Gateway, the system automatically:
+
+- **Curates relevant tools** from large API catalogs based on user intent
+- **Prevents tool overload** that can cause agent hallucinations and incorrect tool selections
+- **Improves agent responses** by finding the most relevant tools for each request
+- **Reduces noise** by filtering out irrelevant operations from extensive API specifications
+
+**Built-in Search Tool**: Gateway provides a special `x_amz_bedrock_agentcore_search` tool accessible via standard MCP operations for intelligent tool discovery at scale.
+
+### Implementation in This Project
+
+**Gateway Integration:**
+```python
+gateway = client.setup_gateway(
+    gateway_name="aws-operations",
+    target_source=json.dumps(api_config),
+    execution_role_arn=role_arn,
+    authorizer_config=cognito['authorizer_config'],
+    target_type='openapi',
+    enable_semantic_search=True,  # Enables intelligent tool curation
+    description="AWS operations gateway with semantic tool selection"
+)
+```
+
+### Benefits in Multi-Agent Operations
+
+1. **Intelligent Tool Selection**: From hundreds of AWS API operations, semantic search identifies the most relevant tools for each user request
+2. **Enhanced Agent Coordination**: Agents receive curated, contextually relevant tools rather than overwhelming API catalogs
+3. **Improved User Experience**: More accurate responses through better tool selection and reduced irrelevant operations
+4. **Scalable API Integration**: Handles large API specifications efficiently by surfacing only relevant operations
+
+### Semantic Search Workflow
+
+1. **User Request**: "My Lambda function has performance issues"
+2. **Semantic Analysis**: Gateway identifies performance-related AWS operations from API catalog
+3. **Tool Curation**: Returns Lambda monitoring, CloudWatch metrics, and performance tuning tools
+4. **Agent Processing**: Agents receive focused, relevant tools instead of entire AWS API catalog
+5. **Targeted Response**: More precise solutions using semantically-matched operations
+
+This semantic approach enables the system to understand intent rather than relying on exact keyword matches, making the multi-agent system more intelligent and responsive to user needs.
+
 ## Architecture
 
 **6 Specialized Agents:**
@@ -242,9 +289,10 @@ agentcore-search/
 ## Key Components
 
 **AgentCore Gateway:**
-- Semantic search for tool curation
-- JWT authentication with Cognito
+- Semantic search with `enable_semantic_search=True` for intelligent tool curation
+- JWT authentication with Cognito OAuth integration
 - Multi-service API integration (S3, Lambda, EKS, CloudWatch)
+- MCP (Model Context Protocol) endpoint for agent framework integration
 
 **Multi-Agent System:**
 - Hub-and-spoke communication pattern
