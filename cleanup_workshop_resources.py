@@ -91,13 +91,27 @@ class WorkshopCleanup:
         success = True
         
         try:
-            # 1. Find and delete gateway
-            gateway_id = self._find_gateway_by_pattern("agentcore-gateway")
+            # 1. Find and delete gateway from config file
+            gateway_id = self._get_gateway_id_from_config()
             if gateway_id:
                 print(f"  🗑️ Deleting gateway: {gateway_id}")
-                # Note: Gateway deletion API call would go here
-                # self.clients['agentcore_control'].delete_gateway(gatewayId=gateway_id)
-                print(f"  ⚠️ Gateway deletion requires manual cleanup via console")
+                try:
+                    # First, delete all gateway targets
+                    self._delete_gateway_targets(gateway_id)
+                    
+                    # Wait for target deletions to propagate
+                    print(f"  ⏳ Waiting for target deletions to propagate...")
+                    time.sleep(10)
+                    
+                    # Then delete the gateway
+                    self.clients['agentcore_control'].delete_gateway(gatewayIdentifier=gateway_id)
+                    print(f"  ✅ Gateway deleted successfully")
+                    time.sleep(5)  # Wait for gateway deletion to propagate
+                except Exception as e:
+                    print(f"  ⚠️ Gateway deletion error: {str(e)}")
+                    print(f"  💡 You may need to delete the gateway manually via console")
+            else:
+                print(f"  ⚪ No gateway configuration found")
             
             # 2. Clean up Cognito resources
             self._cleanup_cognito_resources()
@@ -335,11 +349,46 @@ class WorkshopCleanup:
         except Exception as e:
             print(f"    ⚪ No Cognito resources found")
 
-    def _find_gateway_by_pattern(self, pattern: str) -> Optional[str]:
-        """Find gateway ID by name pattern"""
-        # Note: This would require the appropriate AgentCore API call
-        # Placeholder for now
+    def _get_gateway_id_from_config(self) -> Optional[str]:
+        """Get gateway ID from config file"""
+        try:
+            config_path = Path('agentcore-search/gateway/config/gateway_runtime_config.json')
+            if config_path.exists():
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    return config.get('gateway_id')
+        except Exception as e:
+            print(f"    ⚪ Could not read gateway config: {str(e)}")
         return None
+
+    def _delete_gateway_targets(self, gateway_id: str):
+        """Delete all targets associated with a gateway"""
+        try:
+            # List all targets for the gateway
+            response = self.clients['agentcore_control'].list_gateway_targets(
+                gatewayIdentifier=gateway_id
+            )
+            
+            targets = response.get('items', [])
+            if targets:
+                print(f"    🎯 Found {len(targets)} gateway targets to delete")
+                for target in targets:
+                    target_id = target.get('targetId')
+                    target_name = target.get('name', target_id)
+                    if target_id:
+                        try:
+                            self.clients['agentcore_control'].delete_gateway_target(
+                                gatewayIdentifier=gateway_id,
+                                targetId=target_id
+                            )
+                            print(f"    ✅ Deleted gateway target: {target_name} ({target_id})")
+                            time.sleep(2)  # Wait between deletions
+                        except Exception as e:
+                            print(f"    ⚠️ Error deleting target {target_name}: {str(e)}")
+            else:
+                print(f"    ⚪ No gateway targets found")
+        except Exception as e:
+            print(f"    ⚠️ Error listing gateway targets: {str(e)}")
 
     def _delete_codebuild_project(self, project_name: str):
         """Delete CodeBuild project"""
